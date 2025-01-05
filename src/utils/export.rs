@@ -40,28 +40,25 @@ pub struct Exports {
 
 impl Exports {
     pub fn parse<'data, P: PE>(pe: &'data P) -> Result<Exports, exe::Error> {
+        // Windows exports is a real mess to parse...
         let mut export_entries: Vec<ExportEntry> = vec![];
         let directory = pe.get_data_directory(ImageDirectoryEntry::Export)?;
         let start = directory.virtual_address.clone();
         let end = RVA(start.0.checked_add(directory.size).unwrap_or(0xFFFFFFFF));
         let s = ImageExportDirectory::parse(pe)?;
         let functions = s.get_functions(pe)?;
+
+        
         let names = match s.get_names(pe) {
             Ok(e) => e,
             Err(e) => &[],
         };
+
         let ordinals = match s.get_name_ordinals(pe) {
             Ok(ordinals) => ordinals,
             Err(_) => &[],
         };
 
-        // let export_name = match s.get_name(pe) {
-        //     Ok(name) => match name.as_str() {
-        //         Ok(s) => String::from(s),
-        //         Err(_) => CChar_to_escaped_string(name),
-        //     },
-        //     Err(e) => String::from(format!("OOB{}", e)),
-        // };
         let export_name = match pe.translate(PETranslation::Memory(s.name)) {
             Err(e) => return Err(e),
             Ok(a) => match pe.get_cstring(a, false, None) {
@@ -71,14 +68,32 @@ impl Exports {
         };
 
         let mut hm = HashMap::<u16, ExportEntry>::new();
+        let orginal_set: HashSet<u16> = ordinals.iter().map(|x| x.clone()).collect();
+        
+        let mut cnt = 0;
 
         for index in 0u32..s.number_of_functions {
             let mut idx = index;
-            if ordinals.get(index as usize).is_some() {
-                idx = *ordinals.get(index as usize).unwrap() as u32;
+            let mut found = false;
+
+            if orginal_set.contains(&(index as u16)) {
+                idx = match ordinals.get(cnt as usize) {
+                    Some(o) => {
+                        
+                        found = true;
+                        *o as u32
+                    },
+                    None => index,
+                };
             }
+
             let name = |names: &[RVA], idx: u32| -> Option<String> {
-                let name_rva = names.get(idx as usize)?;
+                if ! found {
+                    return None;
+                }
+                let tmp_cnt = cnt;
+                cnt += 1;
+                let name_rva = names.get(tmp_cnt as usize)?;
                 let Ok(name_offset) = pe.translate(PETranslation::Memory(*name_rva)) else {
                     return None; /* we continue instead of returning the error to be greedy with parsing */
                 };
