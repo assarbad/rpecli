@@ -62,7 +62,10 @@ impl Exports {
         let export_name = match pe.translate(PETranslation::Memory(s.name)) {
             Err(e) => return Err(e),
             Ok(a) => match pe.get_cstring(a, false, None) {
-                Ok(s) => CChar_to_escaped_string(s),
+                Ok(s) => match s.as_str() {
+                    Ok(export_name_str) => String::from(export_name_str),
+                    Err(_) => CChar_to_escaped_string(s),
+                },
                 Err(_) => String::new(),
             },
         };

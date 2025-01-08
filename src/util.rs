@@ -10,6 +10,12 @@ pub struct FileInfo<T> {
     pub info: T,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct FileExports<T> {
+    pub name: String,
+    pub exports: T,
+}
+
 pub fn CChar_to_escaped_string(val: &[CChar]) -> String {
     let bytes: Vec<u8> = val.iter().map(|x| x.0).collect();
     bytes.escape_ascii().to_string()

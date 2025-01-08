@@ -1,13 +1,14 @@
 use crate::import_export;
-use crate::util::FileInfo;
+use crate::util::{FileExports, FileInfo};
 use crate::utils::export::Exports;
 use crate::utils::import::Imports;
 use crate::{alert_format, alert_format_if, color_format_if, warn_format, warn_format_if};
+use clap::builder::OsStr;
 use colored::Colorize;
 use exe::{FileCharacteristics, VecPE, PE};
 use serde::{Deserialize, Serialize};
 use std::io::{stdout, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct FileExport {
@@ -77,7 +78,8 @@ pub fn import_cmd(pe_filepaths: &Vec<String>, json_output: bool) {
 }
 
 pub fn export_cmd(pe_filepaths: &Vec<String>, json_output: bool) {
-    let mut result = Vec::<FileExport>::new();
+    // let mut result = Vec::<FileExports>::new();
+
     for file in pe_filepaths {
         if json_output {
             let Ok(image) = VecPE::from_disk_file(file) else {
@@ -92,15 +94,10 @@ pub fn export_cmd(pe_filepaths: &Vec<String>, json_output: bool) {
                 }
             };
             let exp = Exports::parse(&image);
-            let f = FileInfo {
-                input_filename: file.clone(),
-                info: exp.ok(),
+            let f = FileExports {
+                name: String::from(PathBuf::from(file.clone()).file_name().unwrap_or(&OsStr::from("")).to_str().unwrap()),
+                exports: exp.ok(),
             };
-            // result.push(FileExport {
-            // name: filename.to_str().unwrap().to_string(),
-            // exports: exp.ok(),
-            // });
-
             write!(stdout(), "{}\n", serde_json::to_string(&f).unwrap());
         } else {
             display_exports(file);
