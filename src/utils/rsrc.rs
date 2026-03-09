@@ -31,7 +31,7 @@ use term_table::Table;
 
 use super::import::ImportFunction;
 
-#[derive(Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct ResourceEntry {
     pub rsrc_type: String,
     pub type_id: Option<u32>,
@@ -39,9 +39,10 @@ pub struct ResourceEntry {
     pub lang_id: String,
     pub data_start: Option<usize>,
     pub data_end: Option<usize>,
+    pub entropy: Option<f32>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Serialize, Deserialize, Default, Clone, PartialEq, PartialOrd)]
 pub struct Resources {
     pub minor_version: u16,
     pub major_version: u16,
@@ -100,9 +101,15 @@ impl Resources {
                 Ok(offset) => {
                     resource_entry.data_start = Some(offset as usize);
                     resource_entry.data_end = Some(offset + data_entry.size as usize);
+
+                    let res_data = safe_read(pe, offset, data_entry.size as usize);
+                    resource_entry.entropy = Some(shannon_entropy(res_data.as_ref()));
                 }
                 Err(_) => {}
             };
+
+            
+
 
             result.resources.push(resource_entry);
         }
