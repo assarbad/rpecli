@@ -2,7 +2,10 @@ use std::fmt::Display;
 
 use crate::utils::sections::get_section_name_from_offset;
 use colored::Colorize;
-use exe::{Address, ImageDirectoryEntry, ImageTLSDirectory32, ImageTLSDirectory64, PETranslation, VecPE, PE, RVA};
+use exe::{
+    Address, ImageDirectoryEntry, ImageTLSDirectory32, ImageTLSDirectory64, PETranslation, VecPE,
+    PE, RVA,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -12,12 +15,11 @@ pub struct TLSCallbacks {
 
 impl TLSCallbacks {
     pub fn check_exists(pe: &VecPE) -> bool {
-        if let Ok(security_dir) = pe
-            .get_data_directory(exe::ImageDirectoryEntry::TLS){
-                if security_dir.virtual_address.0 != 0 {
-                    return true;
-                }
+        if let Ok(security_dir) = pe.get_data_directory(exe::ImageDirectoryEntry::TLS) {
+            if security_dir.virtual_address.0 != 0 {
+                return true;
             }
+        }
         return false;
     }
 
@@ -52,7 +54,6 @@ impl Display for TLSCallbacks {
         Ok(())
     }
 }
-
 
 fn handle_callbacks<A: Address>(callbacks: &[A], pe: &VecPE) -> Vec<u64> {
     let mut result = vec![];

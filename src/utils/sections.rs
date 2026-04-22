@@ -247,7 +247,7 @@ impl Display for SectionTable<'_> {
                     term_table::table_cell::Alignment::Left,
                 ),
             ]));
-            
+
             println!(
                 "{:9} {:>#10x} {:>#10x} {:>#9x} {:>#9x}   {:>6.2}      {:>15x} ({:?}) ",
                 section.name.as_str(),
@@ -260,11 +260,12 @@ impl Display for SectionTable<'_> {
                 // shannon_entropy(section.read(pe).unwrap()),
                 // md5::compute(section.read(pe).unwrap()),
                 section.characteristics,
-                SectionCharacteristics::from_bits(section.characteristics).unwrap().0
-                // section.characteristics
-                    // & (SectionCharacteristics::MEM_EXECUTE
-                        // | SectionCharacteristics::MEM_READ
-                        // | SectionCharacteristics::MEM_WRITE)
+                SectionCharacteristics::from_bits(section.characteristics)
+                    .unwrap()
+                    .0 // section.characteristics
+                       // & (SectionCharacteristics::MEM_EXECUTE
+                       // | SectionCharacteristics::MEM_READ
+                       // | SectionCharacteristics::MEM_WRITE)
             );
             // }
             // Err(_) => panic!("Could not parse section table ! Is your file a PE file?"),

@@ -95,7 +95,13 @@ pub fn export_cmd(pe_filepaths: &Vec<String>, json_output: bool) {
             };
             let exp = Exports::parse(&image);
             let f = FileExports {
-                name: String::from(PathBuf::from(file.clone()).file_name().unwrap_or(&OsStr::from("")).to_str().unwrap()),
+                name: String::from(
+                    PathBuf::from(file.clone())
+                        .file_name()
+                        .unwrap_or(&OsStr::from(""))
+                        .to_str()
+                        .unwrap(),
+                ),
                 exports: exp.ok(),
             };
             write!(stdout(), "{}\n", serde_json::to_string(&f).unwrap());

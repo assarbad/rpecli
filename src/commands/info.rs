@@ -16,7 +16,7 @@ use crate::utils::timestamps::format_timestamp;
 use crate::{alert_format, alert_format_if, color_format_if, warn_format, warn_format_if};
 
 use crate::utils::hash;
-use crate::utils::tls::{TLSCallbacks};
+use crate::utils::tls::TLSCallbacks;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use human_bytes::human_bytes;
 
@@ -105,12 +105,7 @@ fn display_info(pe_filepath: &String, display_hashes: bool) {
         exe::Arch::X64 => 64u32,
     };
     if let Ok(ep) = entrypoint.as_offset(&image) {
-        disassemble_bytes(
-            image.get_buffer().as_ref(),
-            bitness,
-            ep.0 as usize,
-            10,
-        );
+        disassemble_bytes(image.get_buffer().as_ref(), bitness, ep.0 as usize, 10);
     } else {
         println!("Invalid entrypoint: {:#x}", entrypoint.0);
     }
@@ -153,21 +148,21 @@ fn display_info(pe_filepath: &String, display_hashes: bool) {
                     for c in callbacks.callbacks.iter() {
                         println!("{:#x}", c);
                     }
-                },
-                None => {},
+                }
+                None => {}
             },
             Err(e) => match e {
                 exe::Error::OutOfBounds(_, _) => {
                     println!("OOB");
-                },
+                }
                 exe::Error::BadAlignment => {
                     println!("Bad alignement");
-                },
+                }
                 exe::Error::BadDirectory(image_directory_entry) => {
                     println!("Bad directory entry");
-                },
+                }
                 _ => {
-                    println!("Unknown error with TLS directory");    
+                    println!("Unknown error with TLS directory");
                 }
             },
         }

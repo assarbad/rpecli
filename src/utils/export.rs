@@ -48,7 +48,6 @@ impl Exports {
         let s = ImageExportDirectory::parse(pe)?;
         let functions = s.get_functions(pe)?;
 
-        
         let names = match s.get_names(pe) {
             Ok(e) => e,
             Err(e) => &[],
@@ -72,7 +71,7 @@ impl Exports {
 
         let mut hm = HashMap::<u16, ExportEntry>::new();
         let orginal_set: HashSet<u16> = ordinals.iter().map(|x| x.clone()).collect();
-        
+
         let mut cnt = 0;
 
         for index in 0u32..s.number_of_functions {
@@ -82,16 +81,15 @@ impl Exports {
             if orginal_set.contains(&(index as u16)) {
                 idx = match ordinals.get(cnt as usize) {
                     Some(o) => {
-                        
                         found = true;
                         *o as u32
-                    },
+                    }
                     None => index,
                 };
             }
 
             let name = |names: &[RVA], idx: u32| -> Option<String> {
-                if ! found {
+                if !found {
                     return None;
                 }
                 let tmp_cnt = cnt;

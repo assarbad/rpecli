@@ -53,9 +53,7 @@ pub struct Resources {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct RsrcDirectory {
-
-}
+pub struct RsrcDirectory {}
 
 impl Resources {
     pub fn parse<'data, P: PE>(pe: &'data P) -> Result<Option<Resources>, exe::Error> {
@@ -107,9 +105,6 @@ impl Resources {
                 }
                 Err(_) => {}
             };
-
-            
-
 
             result.resources.push(resource_entry);
         }

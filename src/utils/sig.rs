@@ -5,7 +5,7 @@ use authenticode::{
     AttributeCertificateError, AttributeCertificateIterator, AuthenticodeSignature, PeOffsets,
     PeTrait,
 };
-use cms::signed_data::SignerIdentifier;
+use cms::{cert::x509::der, signed_data::SignerIdentifier};
 use colored::Colorize;
 use exe::{
     pe, Address, ImageDataDirectory, VSFixedFileInfo, VSStringFileInfo, VSStringTable,
@@ -56,14 +56,16 @@ impl PeTrait for PEForParsing {
             }
         };
         // security_dir.virtual_address.0 as usize..security_dir.virtual_address.0.checked_add(security_dir.size)
-        let end_range = match security_dir.virtual_address.0.checked_add(security_dir.size) {
+        let end_range = match security_dir
+            .virtual_address
+            .0
+            .checked_add(security_dir.size)
+        {
             Some(r) => r,
-            None => {
-                return Err(authenticode::PeOffsetError)
-            },
+            None => return Err(authenticode::PeOffsetError),
         };
         Ok(Some(
-            security_dir.virtual_address.0 as usize..end_range as usize
+            security_dir.virtual_address.0 as usize..end_range as usize,
         ))
     }
 
@@ -134,9 +136,15 @@ impl PeAuthenticodes {
         let mut result = PeAuthenticodes { signatures: vec![] };
         let security_dir = match pe.get_data_directory(exe::ImageDirectoryEntry::Security) {
             Ok(security_dir) => security_dir,
-            Err(_) => return Ok(result),
+            Err(_) => {
+                return {
+                    println!("ERR");
+                    Ok(result)
+                }
+            }
         };
         if security_dir.virtual_address.0 == 0 {
+            println!("secruity dir va == 0");
             return Ok(result);
         } else {
             let peparse = PEForParsing { pe: pe.clone() };
@@ -145,25 +153,61 @@ impl PeAuthenticodes {
                 for (sig_id, sig) in sigs.enumerate() {
                     match sig {
                         Ok(s) => {
-                            if s.get_authenticode_signature().is_ok() {
-                                result
-                                    .signatures
-                                    .push(AuthenSig::from(s.get_authenticode_signature().unwrap()))
-                            }
+                            match s.get_authenticode_signature() {
+                                Ok(s) => {
+                                    result.signatures.push(AuthenSig::from(s));
+                                }
+                                Err(e) => {
+                                    match e {
+                                        authenticode::AttributeCertificateAuthenticodeError::InvalidCertificateRevision(e) => dbg!(e),
+                                        authenticode::AttributeCertificateAuthenticodeError::InvalidCertificateType(e) => dbg!(e),
+                                        authenticode::AttributeCertificateAuthenticodeError::InvalidSignature(authenticode_signature_parse_error) => {
+                                            match authenticode_signature_parse_error {
+                                                authenticode::AuthenticodeSignatureParseError::InvalidSignedData(error) => {
+                                                    if error.kind() == der::ErrorKind::SetDuplicate {
+                                                        println!(
+                                                            "{}",
+                                                            alert_format!(format!("Signature is a duplicate !"))
+                                                        );
+                                                        result.signatures.push(AuthenSig::from(s.get_authenticode_signature().unwrap()));
+                                                    }
+                                                },
+                                                _ => {}
+                                            }
+                                            println!("Parse error");
+                                            dbg!(authenticode_signature_parse_error);
+                                            0u16
+                                        }
+                                    };
+                                }
+                            };
+
+                            // .is_ok() {
+                            //     result
+                            //         .signatures
+                            //         .push(AuthenSig::from(s.get_authenticode_signature().unwrap()))
+                            // } else {
+                            //     println!("Not ok")
+                            // }
                         }
                         Err(e) => {
+                            println!("ERRRR");
                             match e {
                                 AttributeCertificateError::InvalidCertificateSize { size } => {
                                     return Err(AttributeCertificateError::InvalidCertificateSize {
                                         size: sig_id as u32 + 1,
                                     })
                                 }
-                                _ => {}
+                                _ => {
+                                    println!("Other error");
+                                }
                             };
                             return Err(e);
                         }
                     };
                 }
+            } else {
+                println!("No sig it");
             }
         }
 
@@ -231,7 +275,10 @@ impl Display for PeAuthenticodes {
 
 pub fn display_sig(pe: &VecPE) {
     let sigs = match PeAuthenticodes::parse(pe) {
-        Ok(sigs) => sigs,
+        Ok(sigs) => {
+            println!("Sig dir found");
+            sigs
+        }
         Err(e) => match e {
             AttributeCertificateError::OutOfBounds => {
                 println!(

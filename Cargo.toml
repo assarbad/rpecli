@@ -1,6 +1,6 @@
 [package]
 name = "rpecli"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 license-file = "LICENSE"
 repository = "https://github.com/N0fix/rpecli"
@@ -10,7 +10,7 @@ readme = "README.md"
 description = "Rust cli tool to display information about PE files"
 
 [dependencies]
-authenticode = "0.4.0"
+authenticode = "0.5.0"
 bytemuck = "1.13.1"
 chrono = "0.4.26"
 clap = { version = "4.3.8", features = ["derive"] }

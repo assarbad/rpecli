@@ -1,7 +1,16 @@
 use crate::{
     alert_format, alert_format_if, color_format_if,
     utils::{
-        self, debug::DebugEntries, export::{pexp, Exports}, import::{pimp, Imports}, rich::RichTable, rich_headers::rich_utils::RichRecord, rsrc::Resources, sections::{Section, SectionTable}, sig::PeAuthenticodes, tls::TLSCallbacks
+        self,
+        debug::DebugEntries,
+        export::{pexp, Exports},
+        import::{pimp, Imports},
+        rich::RichTable,
+        rich_headers::rich_utils::RichRecord,
+        rsrc::Resources,
+        sections::{Section, SectionTable},
+        sig::PeAuthenticodes,
+        tls::TLSCallbacks,
     },
     warn_format, warn_format_if,
 };
@@ -82,7 +91,7 @@ pub fn test_cmd(pe_filepaths: &Vec<String>) {
             tls: match TLSCallbacks::parse(&image).ok() {
                 Some(t) => t,
                 None => None,
-            }
+            },
         };
         write!(stdout(), "{}\n", serde_json::to_string(&file_desc).unwrap());
     }
