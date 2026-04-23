@@ -138,13 +138,11 @@ impl PeAuthenticodes {
             Ok(security_dir) => security_dir,
             Err(_) => {
                 return {
-                    println!("ERR");
                     Ok(result)
                 }
             }
         };
         if security_dir.virtual_address.0 == 0 {
-            println!("secruity dir va == 0");
             return Ok(result);
         } else {
             let peparse = PEForParsing { pe: pe.clone() };
@@ -165,7 +163,7 @@ impl PeAuthenticodes {
                                             match authenticode_signature_parse_error {
                                                 authenticode::AuthenticodeSignatureParseError::InvalidSignedData(error) => {
                                                     if error.kind() == der::ErrorKind::SetDuplicate {
-                                                        println!(
+                                                        eprintln!(
                                                             "{}",
                                                             alert_format!(format!("Signature is a duplicate !"))
                                                         );
@@ -174,7 +172,7 @@ impl PeAuthenticodes {
                                                 },
                                                 _ => {}
                                             }
-                                            println!("Parse error");
+                                            eprintln!("Sig parse error");
                                             dbg!(authenticode_signature_parse_error);
                                             0u16
                                         }
@@ -191,7 +189,6 @@ impl PeAuthenticodes {
                             // }
                         }
                         Err(e) => {
-                            println!("ERRRR");
                             match e {
                                 AttributeCertificateError::InvalidCertificateSize { size } => {
                                     return Err(AttributeCertificateError::InvalidCertificateSize {
@@ -199,7 +196,7 @@ impl PeAuthenticodes {
                                     })
                                 }
                                 _ => {
-                                    println!("Other error");
+                                    eprintln!("Other error");
                                 }
                             };
                             return Err(e);
@@ -207,7 +204,7 @@ impl PeAuthenticodes {
                     };
                 }
             } else {
-                println!("No sig it");
+                // println!("No sig it");
             }
         }
 
